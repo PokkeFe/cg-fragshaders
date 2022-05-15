@@ -30,6 +30,16 @@
             video.muted = true;
             video.loop = true;
 
+
+            // Hide all custom controls by default
+            let custom_shader_controls = document.getElementById("custom_shader_controls").children;
+            for(let control_group of custom_shader_controls) {
+                control_group.style.display = 'none';
+                if (control_group.id == event.target.id + '_controls') {
+                    control_group.style.display = 'block';
+                }
+            }
+
             glapp = new GlApp('view', 800, 450, video);
             
             video.onloadedmetadata = (e) => {
@@ -65,6 +75,16 @@
         }
 
         function selectFilter(event) {
+
+            // Hide all custom shader controls except ones with a matching name to the target
+            let custom_shader_controls = document.getElementById("custom_shader_controls").children;
+            for(let control_group of custom_shader_controls) {
+                control_group.style.display = 'none';
+                if (control_group.id == event.target.id + '_controls') {
+                    control_group.style.display = 'block';
+                }
+            }
+
             let i;
             let filters = document.getElementsByClassName('filter_button');
             for (i = 0; i < filters.length; i++) {
@@ -124,6 +144,12 @@
                 start_stop_button.style.backgroundColor = '#48C45B';
             }
         }
+
+        function updateSlider() {
+            let val = document.getElementById("custom_scale_mult").value;
+            glapp.custom_scale = parseInt(val);
+        }
+
     </script>
 </head>
 <body onload="init()">
@@ -149,11 +175,23 @@
                 <div id="toon_button" class="filter_button">
                     <p id="toon">Toonify</p>
                 </div>
-                <div id="custom_button" class="filter_button">
-                    <p id="custom">Custom</p>
+                <br>
+                <h3>Custom Shaders</h3>
+                <div id="blur_button" class="filter_button custom_shader">
+                    <p id="blur">Blur</p>
+                </div>
+                <div id="hollywood_button" class="filter_button custom_shader">
+                    <p id="hollywood">Hollywood</p>
                 </div>
             </div>
             <div class="spacer"></div>
+            <h3>Custom Shader Options</h3>
+            <div id="custom_shader_controls">
+                <div id="hollywood_controls">
+                    <label for="custom_scale_mult">Scale Multiplier</label>
+                    <input id="custom_scale_mult" name="custom_scale_mult" type="range" min="5" max="50" value="20" step="1">
+                </div>
+            </div>
             <div>
                 <div id="image_toggle">
                     <div style="display: inline-block;">

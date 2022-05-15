@@ -18,6 +18,7 @@ class GlApp {
             fish_eye: null,
             ripple: null,
             toon: null,
+            blur: null,
             custom: null
         };
 
@@ -35,6 +36,15 @@ class GlApp {
         this.has_video = false;                           // flag - whether video is playing yet or not
         this.video_texture = null;                        // texture for video
 
+
+        this.custom_controls = {
+            hollywood: {
+                scale_slider: document.getElementById('custom_scale_mult')
+            }
+        }
+
+        this.custom_scale = 50.0;
+
         this.filter = 'normal';                           // current shading algorithm to use for rendering
 
         this.start_time = performance.now();              // start time of app
@@ -51,12 +61,14 @@ class GlApp {
         let ripple_fs = this.getFile('shaders/ripple.frag');
         let toon_vs = this.getFile('shaders/toon.vert');
         let toon_fs = this.getFile('shaders/toon.frag');
-        let custom_vs = this.getFile('shaders/custom.vert');
-        let custom_fs = this.getFile('shaders/custom.frag');
+        let blur_vs = this.getFile('shaders/blur.vert');
+        let blur_fs = this.getFile('shaders/blur.frag');
+        let hollywood_vs = this.getFile('shaders/hollywood.vert');
+        let hollywood_fs = this.getFile('shaders/hollywood.frag');
 
         Promise.all([normal_vs, normal_fs, black_white_vs, black_white_fs,
                      fish_eye_vs, fish_eye_fs, ripple_vs, ripple_fs,
-                     toon_vs, toon_fs, custom_vs, custom_fs])
+                     toon_vs, toon_fs, blur_vs, blur_fs, hollywood_vs, hollywood_fs])
         .then((shaders) => this.loadAllShaders(shaders))
         .catch((error) => this.getFileError(error));
     }
@@ -67,7 +79,8 @@ class GlApp {
         this.shader.fish_eye = this.createShaderProgram(shaders[4], shaders[5]);
         this.shader.ripple = this.createShaderProgram(shaders[6], shaders[7]);
         this.shader.toon = this.createShaderProgram(shaders[8], shaders[9]);
-        this.shader.custom = this.createShaderProgram(shaders[10], shaders[11]);
+        this.shader.blur = this.createShaderProgram(shaders[10], shaders[11]);
+        this.shader.hollywood = this.createShaderProgram(shaders[12], shaders[13]);
 
         this.initializeGlApp();
     }
@@ -233,10 +246,26 @@ class GlApp {
         this.gl.uniformMatrix4fv(shader.uniforms.view_matrix, false, this.view_matrix);
         this.gl.uniformMatrix4fv(shader.uniforms.model_matrix, false, this.model_matrix);
 
-        if (this.filter === 'custom') {
+        // Custom Shader Parameters
+        if (this.filter === 'blur') {
             this.gl.uniform1f(shader.uniforms.width, this.video.videoWidth);
             this.gl.uniform1f(shader.uniforms.height, this.video.videoHeight);
         }
+
+        else if (this.filter === 'hollywood') {
+            this.gl.uniform1f(shader.uniforms.width, this.video.videoWidth);
+            this.gl.uniform1f(shader.uniforms.height, this.video.videoHeight);
+
+            this.gl.uniform2f(shader.uniforms.canvas_resolution, this.canvas.width, this.canvas.height);
+            this.gl.uniform2f(shader.uniforms.canvas_resolution, this.canvas.width, this.canvas.height);
+
+            
+            let scale_val = parseInt(this.custom_controls.hollywood.scale_slider.value);
+            this.gl.uniform1f(shader.uniforms.scale_multiplier, scale_val);
+            
+            this.gl.uniform1f(shader.uniforms.time, time / 1000.0);
+        }
+
         else if (this.filter === 'ripple') {
             this.gl.uniform1f(shader.uniforms.time, time / 1000.0);
         }
